@@ -44,7 +44,6 @@ func TestTransferTx(t *testing.T) {
 
 		result := <-results
 		require.NotEmpty(t, result)
-
 		// check transfer
 		transfer := result.Transfer
 		require.NotEmpty(t, transfer)
