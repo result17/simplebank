@@ -60,3 +60,8 @@ channel.buf是一个环形队列
 - 通过pprof分析sync.runtime_SemacquireMutex
 - 第三方工具
 - 分析代码
+
+# wsl host
+```bash
+ip route | grep src | awk '{print $9}'
+```
