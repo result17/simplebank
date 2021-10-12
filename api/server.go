@@ -11,10 +11,10 @@ import (
 )
 
 type Server struct {
-	config util.Config
-	store db.Store
+	config     util.Config
+	store      db.Store
 	tokenMaker token.Maker
-	router *gin.Engine
+	router     *gin.Engine
 }
 
 func NewServer(config util.Config, store db.Store) (*Server, error) {
@@ -23,12 +23,12 @@ func NewServer(config util.Config, store db.Store) (*Server, error) {
 		return nil, fmt.Errorf("cannot create token maker %w", err)
 	}
 	server := &Server{
-		config: config,
-		store: store,
+		config:     config,
+		store:      store,
 		tokenMaker: tokenMaker,
 	}
 
-	if v, ok := binding.Validator.Engine().(*validator.Validate); ok{
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		err := v.RegisterValidation("currency", validCurrency)
 		if err != nil {
 			return nil, err
@@ -45,11 +45,13 @@ func (server *Server) setupRouter() {
 	router.POST("/users", server.createUser)
 	router.POST("/users/login", server.loginUser)
 
-	router.POST("/accounts", server.createAccount)
-	router.GET("/accounts/:id", server.getAccount)
-	router.GET("/accounts", server.listAccount)
+	authRoutes := router.Group("/").Use(authMiddleware(server.tokenMaker))
 
-	router.POST("/transfers", server.createTransfer)
+	authRoutes.POST("/accounts", server.createAccount)
+	authRoutes.GET("/accounts/:id", server.getAccount)
+	authRoutes.GET("/accounts", server.listAccount)
+
+	authRoutes.POST("/transfers", server.createTransfer)
 
 	server.router = router
 }
@@ -60,5 +62,5 @@ func (server *Server) Start(address string) error {
 }
 
 func errorResponse(err error) gin.H {
-	return  gin.H{"error": err.Error()}
+	return gin.H{"error": err.Error()}
 }
