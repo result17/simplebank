@@ -2,6 +2,8 @@ package api
 
 import (
 	"database/sql"
+	"errors"
+	"github.com/cosin/simplebank/token"
 	"github.com/lib/pq"
 	"net/http"
 
@@ -10,8 +12,7 @@ import (
 )
 
 type createAccountRequest struct {
-	Owner    string `json:"owner"binding:"required"`
-	Currency string `json:"currency"binding:"required,oneof=USD EUR CAD"`
+	Currency string `json:"currency" binding:"required,oneof=USD EUR CAD"`
 }
 
 func (server *Server) createAccount(ctx *gin.Context) {
@@ -21,8 +22,10 @@ func (server *Server) createAccount(ctx *gin.Context) {
 		return
 	}
 
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+
 	arg := db.CreateAccountParams{
-		Owner:    req.Owner,
+		Owner:    authPayload.Username,
 		Currency: req.Currency,
 		Balance:  0,
 	}
@@ -62,12 +65,18 @@ func (server *Server) getAccount(ctx *gin.Context) {
 		return
 	}
 
+	authPayload := ctx.MustGet(authorizationPayloadKey).(*token.Payload)
+	if account.Owner != authPayload.Username {
+		err := errors.New("account doesn't belong to the authenticated user")
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+	}
+
 	ctx.JSON(http.StatusOK, account)
 }
 
 type listAccountRequest struct {
 	PageID   int32 `form:"page_id" binding:"required,min=1"`
-	PageSize int32 `form:"page_size" binding:"required,min=5,max=10""`
+	PageSize int32 `form:"page_size" binding:"required,min=5,max=10"`
 }
 
 func (server *Server) listAccount(ctx *gin.Context) {
