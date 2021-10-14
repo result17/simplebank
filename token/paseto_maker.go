@@ -2,22 +2,23 @@ package token
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/o1egl/paseto"
 	"golang.org/x/crypto/chacha20poly1305"
-	"time"
 )
 
 type PasetoMaker struct {
-	paseto *paseto.V2
+	paseto       *paseto.V2
 	symmetricKey []byte
 }
 
-func NewPasetoMarker(symmetricKey string) (Maker, error)  {
+func NewPasetoMarker(symmetricKey string) (Maker, error) {
 	if len(symmetricKey) < chacha20poly1305.KeySize {
-		return nil, fmt.Errorf("invalid key size: must be exactly %d characters", chacha20poly1305.KeySize)
+		return nil, fmt.Errorf("\ninvalid key size: must be exactly %d characters, it is %d\n", chacha20poly1305.KeySize, len(symmetricKey))
 	}
 	maker := &PasetoMaker{
-		paseto: paseto.NewV2(),
+		paseto:       paseto.NewV2(),
 		symmetricKey: []byte(symmetricKey),
 	}
 	return maker, nil
