@@ -1,7 +1,8 @@
 # Build stage
 FROM golang:1.17.2-alpine3.14 AS builder
 ENV GO111MODULE=on \
-  GOPROXY=https://goproxy.cn,direct
+  GOPROXY=https://goproxy.cn,direct \
+  DB_SOURCE=postgresql://root:simple@postgresql13:5432/simple_bank?sslmode=disable
 WORKDIR /app
 COPY . .
 RUN go build -o main main.go
